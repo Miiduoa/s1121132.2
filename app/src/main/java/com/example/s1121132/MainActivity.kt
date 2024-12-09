@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -63,6 +64,8 @@ fun AppContent(onExitApp: () -> Unit) {
     var imagePosition by remember { mutableStateOf(0f) }
     val screenWidth = 1080.dp // 假設螢幕寬度
 
+    var mariaImage by remember { mutableStateOf(R.drawable.maria2) }
+
     // 開始移動圖示
     val coroutineScope = rememberCoroutineScope()
 
@@ -105,7 +108,7 @@ fun AppContent(onExitApp: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.class_b), // 確保圖片名稱和位置正確
                 contentDescription = "資管二B圖片",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(400.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -125,11 +128,30 @@ fun AppContent(onExitApp: () -> Unit) {
 
         // 瑪利亞位置圖示
         Image(
-            painter = painterResource(id = R.drawable.maria2), // 圖示名稱需對應正確
+            painter = painterResource(id = mariaImage), // 圖示名稱需對應正確
             contentDescription = "瑪利亞圖示",
             modifier = Modifier
                 .size(200.dp)
                 .offset(x = imagePosition.dp, y = 600.dp) // 固定底部位置
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            if (colors[colorIndex] == Color(0xff95fe95)) {
+                                score++ // 如果顏色相同加1分
+                            } else {
+                                score-- // 如果顏色不同扣1分
+                            }
+                            // 隨機更換圖片並重置位置
+                            mariaImage = listOf(
+                                R.drawable.maria0,
+                                R.drawable.maria1,
+                                R.drawable.maria2,
+                                R.drawable.maria3
+                            ).random()
+                            imagePosition = 0f
+                        }
+                    )
+                }
         )
     }
 }
