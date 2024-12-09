@@ -9,10 +9,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,8 +64,10 @@ fun AppContent(onExitApp: () -> Unit) {
     var colorIndex by remember { mutableStateOf(0) }
     var elapsedTime by remember { mutableStateOf(0) }
     var score by remember { mutableStateOf(0) }
-    var imagePosition by remember { mutableStateOf(0f) }
-    val screenWidth = 1080.dp // 假設螢幕寬度
+    var imagePositionX by remember { mutableStateOf(0f) }
+    val screenWidth = 1080f // 假設螢幕寬度
+    val imageSize = 200f // 圖示大小
+    val maxImagePositionX = screenWidth - imageSize // 限制圖片最大 X 偏移量
 
     var mariaImage by remember { mutableStateOf(R.drawable.maria2) }
 
@@ -71,10 +76,10 @@ fun AppContent(onExitApp: () -> Unit) {
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            while (imagePosition < screenWidth.value) {
+            while (imagePositionX < maxImagePositionX) {
                 delay(1000L) // 每秒移動
                 elapsedTime++
-                imagePosition += 50f // 每次右移 50px
+                imagePositionX = (imagePositionX + 50f).coerceAtMost(maxImagePositionX) // 限制最大偏移量
             }
         }
     }
@@ -84,31 +89,35 @@ fun AppContent(onExitApp: () -> Unit) {
             .fillMaxSize()
             .background(colors[colorIndex])
             .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    // 根據滑動方向切換顏色
-                    if (dragAmount > 0) {
-                        // 右滑，顏色向後切換
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        // 放開滑鼠或手指後切換顏色
                         colorIndex = (colorIndex + 1) % colors.size
-                    } else if (dragAmount < 0) {
-                        // 左滑，顏色向前切換
-                        colorIndex = (colorIndex - 1 + colors.size) % colors.size
+                    },
+                    onHorizontalDrag = { _, _ ->
+                        // 滑動過程中不切換顏色
                     }
-                }
+                )
             },
-        contentAlignment = Alignment.TopStart
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
             // 顯示標題
             Text(text = "2024期末上機考(資管二B 顧晉瑋)")
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 加入圖片
+            // 加入圖片，放大以左右貼齊螢幕
             Image(
                 painter = painterResource(id = R.drawable.class_b), // 確保圖片名稱和位置正確
                 contentDescription = "資管二B圖片",
-                modifier = Modifier.size(400.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp), // 可調整高度
+                contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -132,7 +141,7 @@ fun AppContent(onExitApp: () -> Unit) {
             contentDescription = "瑪利亞圖示",
             modifier = Modifier
                 .size(200.dp)
-                .offset(x = imagePosition.dp, y = 600.dp) // 固定底部位置
+                .offset(x = imagePositionX.dp, y = 450.dp) // 固定底部位置
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onDoubleTap = {
@@ -148,7 +157,7 @@ fun AppContent(onExitApp: () -> Unit) {
                                 R.drawable.maria2,
                                 R.drawable.maria3
                             ).random()
-                            imagePosition = 0f
+                            imagePositionX = 0f
                         }
                     )
                 }
