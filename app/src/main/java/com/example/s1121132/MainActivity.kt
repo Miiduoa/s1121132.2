@@ -13,13 +13,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +32,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.s1121132.ui.theme.S1121132Theme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,8 +60,22 @@ fun AppContent(onExitApp: () -> Unit) {
     var colorIndex by remember { mutableStateOf(0) }
     var elapsedTime by remember { mutableStateOf(0) }
     var score by remember { mutableStateOf(0) }
+    var imagePosition by remember { mutableStateOf(0f) }
+    val screenWidth = 1080.dp // 假設螢幕寬度
 
-    // 背景顏色切換功能
+    // 開始移動圖示
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            while (imagePosition < screenWidth.value) {
+                delay(1000L) // 每秒移動
+                elapsedTime++
+                imagePosition += 50f // 每次右移 50px
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +92,7 @@ fun AppContent(onExitApp: () -> Unit) {
                     }
                 }
             },
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.TopStart
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
@@ -103,6 +122,15 @@ fun AppContent(onExitApp: () -> Unit) {
                 Text(text = "結束App")
             }
         }
+
+        // 瑪利亞位置圖示
+        Image(
+            painter = painterResource(id = R.drawable.maria2), // 圖示名稱需對應正確
+            contentDescription = "瑪利亞圖示",
+            modifier = Modifier
+                .size(200.dp)
+                .offset(x = imagePosition.dp, y = 600.dp) // 固定底部位置
+        )
     }
 }
 
